@@ -1,8 +1,10 @@
-import { DB } from 'libs/db';
+import DB from './libs/db';
 import http from 'http';
 import sendResponse from './utils/sendResponse';
 import HttpStatusCodes from './utils/constants';
 import parseRequest from './utils/parseRequest';
+import { validateUserData, validateUuid } from './utils/validation';
+import { configDB } from './libs/dbHelpers';
 
 class App {
   constructor(private db: DB) {
@@ -15,12 +17,20 @@ class App {
   }
 
   async getUser(id: string, res: http.ServerResponse) {
-    const user = await this.db.getUser(id);
-    if (user) {
-      sendResponse(res, HttpStatusCodes.OK, user);
+    const isValidId = validateUuid(id);
+
+    if (isValidId) {
+      const user = await this.db.getUser(id);
+      if (user) {
+        sendResponse(res, HttpStatusCodes.OK, user);
+      } else {
+        sendResponse(res, HttpStatusCodes.NOT_FOUND, {
+          error: `User with id ${id} not found`,
+        });
+      }
     } else {
-      sendResponse(res, HttpStatusCodes.NOT_FOUND, {
-        error: `User with id ${id} not found`,
+      sendResponse(res, HttpStatusCodes.BAD_REQUEST, {
+        error: 'Provided id is not a valid id (uuid)',
       });
     }
   }
@@ -46,7 +56,7 @@ class App {
     });
   }
 
-  async handleGetRequest(req: http.IncomingMessage, res: http.ServerResponse) {
+  async getReqHandler(req: http.IncomingMessage, res: http.ServerResponse) {
     const id = req.url ? parseRequest(req.url) : null;
 
     if (id) {
@@ -56,7 +66,7 @@ class App {
     }
   }
 
-  async handlePostRequest(req: http.IncomingMessage, res: http.ServerResponse) {
+  async postReqHandler(req: http.IncomingMessage, res: http.ServerResponse) {
     let data: string = '';
 
     req.on('data', (dataChunk) => {
@@ -65,44 +75,67 @@ class App {
 
     req.on('end', async () => {
       const body = JSON.parse(data);
-      const newUser = await this.db.createUser(body);
-      sendResponse(res, HttpStatusCodes.CREATED, newUser);
+      const isValidUser = validateUserData(body);
+
+      if (isValidUser) {
+        const newUser = await this.db.createUser(body);
+
+        sendResponse(res, HttpStatusCodes.CREATED, newUser);
+      } else {
+        sendResponse(res, HttpStatusCodes.BAD_REQUEST, {
+          error: 'User data has incorrect format',
+        });
+      }
     });
   }
 
-  async handlePutRequest(req: http.IncomingMessage, res: http.ServerResponse) {
+  async putReqHandler(req: http.IncomingMessage, res: http.ServerResponse) {
     const id = req.url ? parseRequest(req.url) : null;
 
     if (id) {
-      await this.updateUser(req, res, id);
-    } else {
-      sendResponse(res, HttpStatusCodes.BAD_REQUEST, {
-        error: 'Provided id is not a valid id (uuid)',
-      });
-    }
-  }
+      const isValidId = validateUuid(id);
 
-  async handleDeleteRequest(req: http.IncomingMessage, res: http.ServerResponse) {
-    const id = req.url ? parseRequest(req.url) : null;
-
-    if (id) {
-      const deletedUser = await this.db.deleteUser(id);
-
-      if (deletedUser) {
-        sendResponse(res, HttpStatusCodes.NO_CONTENT, deletedUser);
+      if (isValidId) {
+        await this.updateUser(req, res, id);
       } else {
-        sendResponse(res, HttpStatusCodes.NOT_FOUND, {
-          error: `User with id ${id} doesn't exist`,
+        sendResponse(res, HttpStatusCodes.BAD_REQUEST, {
+          error: 'Provided id is not a valid id (uuid)',
         });
       }
     } else {
-      sendResponse(res, HttpStatusCodes.BAD_REQUEST, {
-        error: 'Provided id is not a valid id (uuid)',
-      });
+      sendResponse(res, HttpStatusCodes.NOT_FOUND, { error: `User id is not provided` });
     }
   }
 
-  async handleRequest(req: http.IncomingMessage, res: http.ServerResponse) {
+  async deleteReqHandler(req: http.IncomingMessage, res: http.ServerResponse) {
+    const id = req.url ? parseRequest(req.url) : null;
+
+    if (id) {
+      const isValidId = validateUuid(id);
+
+      if (isValidId) {
+        const deletedUser = await this.db.deleteUser(id);
+
+        if (deletedUser) {
+          sendResponse(res, HttpStatusCodes.NO_CONTENT, {
+            message: 'User was successfully deleted',
+          });
+        } else {
+          sendResponse(res, HttpStatusCodes.NOT_FOUND, {
+            error: `User with id ${id} does not exist`,
+          });
+        }
+      } else {
+        sendResponse(res, HttpStatusCodes.BAD_REQUEST, {
+          error: 'Provided id is not a valid id (uuid)',
+        });
+      }
+    } else {
+      sendResponse(res, HttpStatusCodes.NOT_FOUND, { error: `User id was not provided` });
+    }
+  }
+
+  async requestHandler(req: http.IncomingMessage, res: http.ServerResponse) {
     try {
       res.setHeader('Content-Type', 'application/json');
 
@@ -115,16 +148,16 @@ class App {
 
       switch (req.method) {
         case 'GET':
-          await this.handleGetRequest(req, res);
+          await this.getReqHandler(req, res);
           break;
         case 'POST':
-          await this.handlePostRequest(req, res);
+          await this.postReqHandler(req, res);
           break;
         case 'PUT':
-          await this.handlePutRequest(req, res);
+          await this.putReqHandler(req, res);
           break;
         case 'DELETE':
-          await this.handleDeleteRequest(req, res);
+          await this.deleteReqHandler(req, res);
           break;
         default:
           sendResponse(res, HttpStatusCodes.NOT_SUPPORTED, {
@@ -132,6 +165,7 @@ class App {
           });
       }
     } catch (error) {
+      configDB.end();
       sendResponse(res, HttpStatusCodes.INTERNAL_SERVER_ERROR, {
         error: 'Internal Server Error',
       });

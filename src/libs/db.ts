@@ -2,7 +2,7 @@ import { IUser } from '../types/types';
 import { User } from '../models/User';
 import { readDB, updateDB } from './dbHelpers';
 
-export class DB {
+class DB {
   async getUsers() {
     return await readDB();
   }
