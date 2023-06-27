@@ -1,5 +1,5 @@
-import { IUser } from 'types/types';
-import { User } from 'models/User';
+import { IUser } from '../types/types';
+import { User } from '../models/User';
 import { readDB, updateDB } from './dbHelpers';
 
 export class DB {
@@ -44,6 +44,4 @@ export class DB {
   }
 }
 
-const db = new DB();
-
-export default db;
+export default DB;

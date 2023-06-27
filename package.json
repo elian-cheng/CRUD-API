@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Simple Node.js CRUD API using in-memory database underneath",
   "scripts": {
+    "start": "nodemon ./src/index.ts",
     "start:dev": "nodemon ./src/index.ts",
     "start:prod": "tsc && node ./dist/index.js",
     "test": "jest"
@@ -42,4 +43,3 @@
     "typescript": "^5.1.3"
   }
 }
-
