@@ -1,0 +1,15 @@
+{
+  "testEnvironment": "node",
+  "extensionsToTreatAsEsm": [".ts"],
+  "verbose": true,
+  "testPathIgnorePatterns": ["dist"],
+  "moduleFileExtensions": ["ts", "js"],
+  "transform": {
+    "^.+\\.(ts|tsx)$": [
+      "ts-jest",
+      {
+        "useESM": true
+      }
+    ]
+  }
+}
