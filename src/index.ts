@@ -17,7 +17,7 @@ const requestHandler = async (req: IncomingMessage, res: ServerResponse) => {
 
 const startServer = () => {
   server.listen(PORT, () => {
-    console.log(`Server is listening on port ${PORT}`);
+    console.log(`Server is listening on the port ${PORT}`);
   });
   server.on('request', requestHandler);
 };

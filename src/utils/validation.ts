@@ -1,4 +1,4 @@
-import { IUser } from 'types/types';
+import { IUser } from '../types/types';
 
 export const validateUuid = (id: string) => {
   const regexExp =

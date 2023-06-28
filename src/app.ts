@@ -1,7 +1,7 @@
 import DB from './libs/db';
 import http from 'http';
 import sendResponse from './utils/sendResponse';
-import HttpStatusCodes from './utils/constants';
+import { BASE_URL, ErrorMessages, HttpStatusCodes } from './utils/constants';
 import parseRequest from './utils/parseRequest';
 import { validateUserData, validateUuid } from './utils/validation';
 import { configDB } from './libs/dbHelpers';
@@ -30,7 +30,7 @@ class App {
       }
     } else {
       sendResponse(res, HttpStatusCodes.BAD_REQUEST, {
-        error: 'Provided id is not a valid id (uuid)',
+        error: ErrorMessages.INVALID_ID,
       });
     }
   }
@@ -79,11 +79,10 @@ class App {
 
       if (isValidUser) {
         const newUser = await this.db.createUser(body);
-
         sendResponse(res, HttpStatusCodes.CREATED, newUser);
       } else {
         sendResponse(res, HttpStatusCodes.BAD_REQUEST, {
-          error: 'User data has incorrect format',
+          error: ErrorMessages.INVALID_DATA,
         });
       }
     });
@@ -99,7 +98,7 @@ class App {
         await this.updateUser(req, res, id);
       } else {
         sendResponse(res, HttpStatusCodes.BAD_REQUEST, {
-          error: 'Provided id is not a valid id (uuid)',
+          error: ErrorMessages.INVALID_ID,
         });
       }
     } else {
@@ -118,7 +117,7 @@ class App {
 
         if (deletedUser) {
           sendResponse(res, HttpStatusCodes.NO_CONTENT, {
-            message: 'User was successfully deleted',
+            message: ErrorMessages.DELETED_USER,
           });
         } else {
           sendResponse(res, HttpStatusCodes.NOT_FOUND, {
@@ -127,11 +126,11 @@ class App {
         }
       } else {
         sendResponse(res, HttpStatusCodes.BAD_REQUEST, {
-          error: 'Provided id is not a valid id (uuid)',
+          error: ErrorMessages.INVALID_ID,
         });
       }
     } else {
-      sendResponse(res, HttpStatusCodes.NOT_FOUND, { error: `User id was not provided` });
+      sendResponse(res, HttpStatusCodes.NOT_FOUND, { error: ErrorMessages.NO_USER_ID });
     }
   }
 
@@ -141,7 +140,7 @@ class App {
 
       const url = req.url;
 
-      if (url && !url.startsWith('/api/users') && !/\/api\/users/.test(url)) {
+      if (url && !url.startsWith(BASE_URL) && !/\/api\/users/.test(url)) {
         sendResponse(res, HttpStatusCodes.NOT_FOUND, { error: `${url} path does not exist` });
         return;
       }
@@ -161,13 +160,13 @@ class App {
           break;
         default:
           sendResponse(res, HttpStatusCodes.NOT_SUPPORTED, {
-            error: 'HTTP method is not supported',
+            error: ErrorMessages.UNSUPPORTED_METHOD,
           });
       }
     } catch (error) {
       configDB.end();
       sendResponse(res, HttpStatusCodes.INTERNAL_SERVER_ERROR, {
-        error: 'Internal Server Error',
+        error: ErrorMessages.SERVER_ERROR,
       });
     }
   }

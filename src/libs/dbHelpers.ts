@@ -1,7 +1,7 @@
 import { join, dirname } from 'path';
 import fsp from 'fs/promises';
 import fs from 'fs';
-import { IUser } from 'types/types';
+import { IUser } from '../types/types';
 
 export const getDB = () => {
   return join(dirname(__dirname), 'libs', 'db.json');

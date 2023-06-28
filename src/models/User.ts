@@ -1,11 +1,11 @@
-import { IUser } from 'types/types';
+import { IUser } from '../types/types';
 import { v4 } from 'uuid';
 
 export class User implements IUser {
   public id: string;
   public username: string;
   public age: number;
-  public hobbies: Array<string>;
+  public hobbies: string[];
 
   constructor(data: Omit<IUser, 'id'>) {
     this.id = v4();

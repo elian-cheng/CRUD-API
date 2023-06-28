@@ -1,4 +1,9 @@
 {
+  "exclude": ["./dist", "__tests__"],
+  "ts-node": {
+    "transpileOnly": true,
+    "files": true
+  },
   "compilerOptions": {
     "target": "ES6",
     "module": "commonjs",

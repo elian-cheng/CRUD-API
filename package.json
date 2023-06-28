@@ -6,7 +6,7 @@
     "start": "nodemon ./src/index.ts",
     "start:dev": "nodemon ./src/index.ts",
     "start:prod": "tsc && node ./dist/index.js",
-    "test": "jest"
+    "test": "jest --coverage --verbose --silent --watchAll=false"
   },
   "repository": {
     "type": "git",
