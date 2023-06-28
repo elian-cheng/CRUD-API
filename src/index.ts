@@ -3,9 +3,9 @@ import dotenv from 'dotenv';
 import DB from './libs/db';
 import App from './app';
 import { configDB } from './libs/dbHelpers';
-dotenv.config();
+import { PORT } from './utils/constants';
 
-const PORT = process.env.PORT || 4000;
+dotenv.config();
 
 const server = http.createServer();
 

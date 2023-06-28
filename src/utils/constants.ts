@@ -1,5 +1,7 @@
 export const BASE_URL = '/api/users';
 
+export const PORT = process.env.PORT || 4000;
+
 export enum HttpStatusCodes {
   OK = 200,
   CREATED = 201,
